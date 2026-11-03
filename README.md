@@ -26,7 +26,7 @@ scripts/setup.sh            # APIs, data, Model Armor template, dependencies, MC
 uv run adk web              # dev UI on port 8000, open it with Web Preview
 ```
 
-MCP Toolbox will running in the background on 127.0.0.1:5000; Run `scripts/toolbox.sh status` to check it.
+MCP Toolbox will be running in the background on 127.0.0.1:5000. Run `scripts/toolbox.sh status` to check it.
 
 Open `/dev-ui/?app=wallet_agent&userId=cust_0001` to chat as a customer. Change `userId` to `support_0001` to chat as support staff.
 

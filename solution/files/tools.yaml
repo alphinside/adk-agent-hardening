@@ -1,0 +1,84 @@
+kind: source
+name: wallet-bq
+type: bigquery
+project: ${GOOGLE_CLOUD_PROJECT}
+location: ${GOOGLE_CLOUD_LOCATION}
+# Rejects anything but SELECT from a tool that takes SQL from the model, and
+# hides every fixed-statement tool not marked readOnlyHint: true. The mark is
+# a label: Toolbox does not check a fixed statement against it.
+readOnly: true
+---
+kind: tool
+name: get_customer_profile
+type: bigquery-sql
+source: wallet-bq
+description: >
+  Get one customer's profile: name, email, tier, balance, account status and
+  tax ID.
+statement: |
+  SELECT customer_id, full_name, email, tier, balance_usd, status, tax_id
+  FROM wallet_support.customers
+  WHERE customer_id = @customer_id
+parameters:
+  - name: customer_id
+    type: string
+    description: Customer ID, such as cust_0001.
+annotations:
+  readOnlyHint: true
+---
+kind: tool
+name: get_transfers
+type: bigquery-sql
+source: wallet-bq
+description: >
+  Get a customer's most recent transfers, newest first, including the note
+  the sender wrote.
+statement: |
+  SELECT txn_id, created_at, type, sender_id, sender_name, recipient_id,
+    recipient_name, amount, currency, note
+  FROM wallet_support.transactions
+  WHERE sender_id = @customer_id OR recipient_id = @customer_id
+  ORDER BY created_at DESC
+  LIMIT @row_limit
+parameters:
+  - name: customer_id
+    type: string
+    description: Customer ID, such as cust_0001.
+  - name: row_limit
+    type: integer
+    description: Maximum number of transfers to return.
+annotations:
+  readOnlyHint: true
+---
+kind: tool
+name: get_linked_accounts
+type: bigquery-sql
+source: wallet-bq
+description: Get the bank accounts a customer has linked to their wallet.
+statement: |
+  SELECT bank_name, account_type, account_number, added_on
+  FROM wallet_support.linked_accounts
+  WHERE customer_id = @customer_id
+parameters:
+  - name: customer_id
+    type: string
+    description: Customer ID, such as cust_0001.
+annotations:
+  readOnlyHint: true
+---
+kind: tool
+name: get_refunds
+type: bigquery-sql
+source: wallet-bq
+description: Get a customer's refund requests and the current status of each.
+statement: |
+  SELECT refund_id, txn_id, reason, status, requested_on, updated_on
+  FROM wallet_support.refunds
+  WHERE customer_id = @customer_id
+  ORDER BY requested_on DESC
+parameters:
+  - name: customer_id
+    type: string
+    description: Customer ID, such as cust_0001.
+annotations:
+  readOnlyHint: true

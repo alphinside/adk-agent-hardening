@@ -16,7 +16,6 @@ echo "Enabling APIs..."
 gcloud services enable \
   aiplatform.googleapis.com \
   bigquery.googleapis.com \
-  iamcredentials.googleapis.com \
   modelarmor.googleapis.com \
   --project="$GOOGLE_CLOUD_PROJECT"
 

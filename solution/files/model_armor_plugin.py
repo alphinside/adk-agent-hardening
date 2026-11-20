@@ -14,6 +14,7 @@ from google.adk.agents.invocation_context import InvocationContext
 from google.adk.models import LlmResponse
 from google.adk.plugins.base_plugin import BasePlugin
 from google.api_core.client_options import ClientOptions
+from google.auth.transport import mtls
 from google.cloud import modelarmor_v1
 from google.genai import types
 
@@ -34,6 +35,22 @@ def with_decoded_base64(text: str) -> str:
     return "\n".join([text, *decoded])
 
 
+# If using Agent Identity on Agent Runtime, credentials are certificate-bound
+# and require the regional mTLS endpoint (modelarmor.<location>.rep.mtls.googleapis.com).
+# Local runs use modelarmor.<location>.rep.googleapis.com.
+def _regional_endpoint(location: str) -> str:
+    use_mtls = os.environ.get("GOOGLE_API_USE_MTLS_ENDPOINT", "auto").lower()
+    if use_mtls not in {"auto", "always", "never"}:
+        use_mtls = "auto"
+    if use_mtls == "always" or (
+        use_mtls == "auto"
+        and mtls.should_use_client_cert()
+        and mtls.has_default_client_cert_source()
+    ):
+        return f"modelarmor.{location}.rep.mtls.googleapis.com"
+    return f"modelarmor.{location}.rep.googleapis.com"
+
+
 class ModelArmorScreenPlugin(BasePlugin):
     def __init__(self) -> None:
         super().__init__(name="model_armor_screen")
@@ -44,7 +61,7 @@ class ModelArmorScreenPlugin(BasePlugin):
         )
         # Model Armor has regional endpoints only.
         self._client = modelarmor_v1.ModelArmorClient(
-            client_options=ClientOptions(api_endpoint=f"modelarmor.{location}.rep.googleapis.com")
+            client_options=ClientOptions(api_endpoint=_regional_endpoint(location))
         )
 
     def _input_flagged(self, text: str) -> bool:

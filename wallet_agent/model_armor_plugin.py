@@ -30,6 +30,9 @@ def with_decoded_base64(text: str) -> str:
     return text
 
 
+# If using Agent Identity on Agent Runtime, credentials are certificate-bound
+# and require the regional mTLS endpoint (modelarmor.<location>.rep.mtls.googleapis.com).
+# Local runs use modelarmor.<location>.rep.googleapis.com.
 def _regional_endpoint(location: str) -> str:
     use_mtls = os.environ.get("GOOGLE_API_USE_MTLS_ENDPOINT", "auto").lower()
     if use_mtls not in {"auto", "always", "never"}:
@@ -51,8 +54,7 @@ class ModelArmorScreenPlugin(BasePlugin):
             f"projects/{os.environ['GOOGLE_CLOUD_PROJECT']}/locations/{location}"
             f"/templates/{os.environ['MODEL_ARMOR_TEMPLATE_ID']}"
         )
-        # Model Armor has regional endpoints only. Agent Identity mints
-        # cert-bound mTLS tokens, while local Cloud Shell stays on .rep.googleapis.com.
+        # Model Armor has regional endpoints only.
         self._client = modelarmor_v1.ModelArmorClient(
             client_options=ClientOptions(api_endpoint=_regional_endpoint(location))
         )

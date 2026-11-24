@@ -14,7 +14,7 @@ set -a; source .env; set +a
 
 enabled=$(gcloud services list --enabled --project="$GOOGLE_CLOUD_PROJECT" \
   --format='value(config.name)' 2>/dev/null)
-for api in aiplatform bigquery iamcredentials modelarmor; do
+for api in aiplatform bigquery modelarmor; do
   grep -qx "$api.googleapis.com" <<<"$enabled" ||
     problems+=("API $api.googleapis.com is not enabled. Run scripts/setup.sh.")
 done

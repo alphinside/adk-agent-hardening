@@ -61,7 +61,7 @@ def mask_account_numbers(
 root_agent = Agent(
     name="wallet_agent",
     model=Gemini(
-        model="gemini-3.8-flash",
+        model="gemini-3.5-flash-lite",
         client_kwargs={"enterprise": True, "location": "global"},
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
